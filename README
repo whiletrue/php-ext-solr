@@ -1,0 +1,42 @@
+================================================================================
+Solr PHP Extension
+================================================================================
+This is a github mirror of the original solr php extension from pecl written
+by I. Ekpo et al. (http://pecl.php.net/package/solr)
+
+================================================================================
+Branches
+================================================================================
+# genericrequest
+Attempt to add a generic method for sending requests to solr. Solr setups may 
+consist of various customized requesthandlers that are not coverable by this 
+extension. The current approach is to add an additional genericRequest() method
+to the SolrClient that internally uses SolrClient::GENERIC_SERVLET_TYPE to send
+the requests to. The servlet can be configured via SolrClient::setServlet(). 
+
+Example: 
+  // client
+  $client = new SolrClient($cfg); 
+  
+  // set servlet to desired destination 
+  // request url will be built pointing to http://host:port/path/servlet/
+  // host,port and path are configuration parameters for SolrClient
+  $client->setServlet(SolrClient::GENERIC_SERVLET_TYPE, 'suggest');
+  
+  // QueryObject
+  // Since QueryObject is a SolrParams class, generic
+  // getters and setters are available for the parameters. 
+  $prms = new SolrQuery();
+  $prms->set('spellcheck', 'true');
+  $prms->set('spellcheck.extendedResults', 'true');
+  $prms->set('q', 'ca.*');
+  $prms->set('spellcheck.dictionary', 'suggest');
+  $prms->set('spellcheck.count', 1000);
+  $prms->set('spellcheck.build', 'true');
+  
+  $resp = $client->requestGeneric($prms);
+   
+
+Even though this seems to work, i could imagine finding a better
+solution for generic requests without interferring with the internal
+servlet/request structure.
