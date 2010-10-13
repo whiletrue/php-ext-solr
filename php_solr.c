@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: php_solr.c 300493 2010-06-16 12:21:19Z iekpo $ */
 
 #include "php_solr.h"
 
@@ -554,7 +554,8 @@ static zend_function_entry solr_client_methods[] = {
 	PHP_ME(SolrClient, addDocument, SolrClient_addDocument_args, ZEND_ACC_PUBLIC)
 	PHP_ME(SolrClient, addDocuments, SolrClient_addDocuments_args, ZEND_ACC_PUBLIC)
 	PHP_ME(SolrClient, request, SolrClient_request_args, ZEND_ACC_PUBLIC)
-	PHP_ME(SolrClient, setResponseWriter, SolrClient_setResponseWriter_args, ZEND_ACC_PUBLIC)
+	PHP_ME(SolrClient, requestGeneric, SolrClient_request_args, ZEND_ACC_PUBLIC)
+    PHP_ME(SolrClient, setResponseWriter, SolrClient_setResponseWriter_args, ZEND_ACC_PUBLIC)
 	PHP_ME(SolrClient, deleteById, SolrClient_deleteById_args, ZEND_ACC_PUBLIC)
 	PHP_ME(SolrClient, deleteByIds, SolrClient_deleteByIds_args, ZEND_ACC_PUBLIC)
 	PHP_ME(SolrClient, deleteByQuery, SolrClient_deleteByQuery_args, ZEND_ACC_PUBLIC)
@@ -1153,7 +1154,7 @@ PHP_MINFO_FUNCTION(solr)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "Solr Extension Version", PHP_SOLR_DOTTED_VERSION);
-	php_info_print_table_row(2, "Solr Extension Revision Id", "$Revision$");
+	php_info_print_table_row(2, "Solr Extension Revision Id", "$Revision: 300493 $");
 	php_info_print_table_row(2, "Last Build Date", __DATE__);
 	php_info_print_table_row(2, "Last Build Time", __TIME__);
 

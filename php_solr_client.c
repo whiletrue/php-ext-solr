@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: php_solr_client.c 300593 2010-06-19 06:09:20Z iekpo $ */
 
 #include "php_solr.h"
 
@@ -46,6 +46,7 @@ static void solr_client_init_urls(solr_client_t *solr_client)
 	solr_string_free(&(options->thread_url));
 	solr_string_free(&(options->ping_url));
 	solr_string_free(&(options->terms_url));
+    solr_string_free(&(options->generic_url));
 
 	/* Making http://hostname:host_port/path/ */
 
@@ -71,6 +72,7 @@ static void solr_client_init_urls(solr_client_t *solr_client)
 	solr_string_append_solr_string(&(options->thread_url), &url_prefix);
 	solr_string_append_solr_string(&(options->ping_url),   &url_prefix);
 	solr_string_append_solr_string(&(options->terms_url),  &url_prefix);
+    solr_string_append_solr_string(&(options->generic_url),&url_prefix);
 
 	/* Making http://hostname:host_port/path/servlet/ */
 	solr_string_append_solr_string(&(options->update_url), &(options->update_servlet));
@@ -78,18 +80,21 @@ static void solr_client_init_urls(solr_client_t *solr_client)
 	solr_string_append_solr_string(&(options->thread_url), &(options->thread_servlet));
 	solr_string_append_solr_string(&(options->ping_url),   &(options->ping_servlet));
 	solr_string_append_solr_string(&(options->terms_url),  &(options->terms_servlet));
+    solr_string_append_solr_string(&(options->generic_url),&(options->generic_servlet));
 
 	solr_string_append_const(&(options->update_url), "/?version=2.2&indent=on&wt=");
 	solr_string_append_const(&(options->search_url), "/?version=2.2&indent=on&wt=");
 	solr_string_append_const(&(options->thread_url), "/?version=2.2&indent=on&wt=");
 	solr_string_append_const(&(options->ping_url),   "/?version=2.2&indent=on&wt=");
 	solr_string_append_const(&(options->terms_url),  "/?version=2.2&indent=on&wt=");
+    solr_string_append_const(&(options->generic_url),"/?version=2.2&indent=on&wt=");
 
 	solr_string_append_solr_string(&(options->update_url), &(options->response_writer));
 	solr_string_append_solr_string(&(options->search_url), &(options->response_writer));
 	solr_string_append_solr_string(&(options->thread_url), &(options->response_writer));
 	solr_string_append_solr_string(&(options->ping_url),   &(options->response_writer));
 	solr_string_append_solr_string(&(options->terms_url),  &(options->response_writer));
+    solr_string_append_solr_string(&(options->generic_url),  &(options->response_writer));
 
 	solr_string_free(&url_prefix);
 }
@@ -272,7 +277,7 @@ PHP_METHOD(SolrClient, __construct)
 	solr_string_append_const(&(client_options->thread_servlet), SOLR_DEFAULT_THREADS_SERVLET);
 	solr_string_append_const(&(client_options->ping_servlet),   SOLR_DEFAULT_PING_SERVLET);
 	solr_string_append_const(&(client_options->terms_servlet),  SOLR_DEFAULT_TERMS_SERVLET);
-
+    solr_string_append_const(&(client_options->generic_servlet),SOLR_DEFAULT_GENERIC_SERVLET);
 
 	if (zend_hash_find(options_ht, "wt", sizeof("wt"), (void**) &tmp1) == SUCCESS && Z_TYPE_PP(tmp1) == IS_STRING && Z_STRLEN_PP(tmp1))
 	{
@@ -587,6 +592,12 @@ PHP_METHOD(SolrClient, setServlet)
 			solr_string_set(&(client->options.ping_servlet), new_servlet_value, new_servlet_value_length);
 		}
 		break;
+        
+        case SOLR_SERVLET_TYPE_GENERIC :
+		{
+			solr_string_set(&(client->options.generic_servlet), new_servlet_value, new_servlet_value_length);
+		}
+        break;
 
 		default :
 		{
@@ -609,6 +620,95 @@ PHP_METHOD(SolrClient, setServlet)
 	} \
 }
 
+
+PHP_METHOD(SolrClient, requestGeneric) {
+    zval *solr_params_obj = NULL;
+	solr_client_t *client = NULL;
+	solr_params_t *solr_params = NULL;
+	solr_string_t *buffer = NULL;
+	solr_char_t *delimiter = NULL;
+	int delimiter_length = 0;
+	zend_bool success = 1;
+	solr_request_type_t solr_request_type = SOLR_REQUEST_GENERIC;
+    
+	if (!return_value_used)
+	{
+		php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Return value requested but output not processed.");
+        
+		return;
+	}
+    
+	/* Process the parameters passed to the default constructor */
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O", &solr_params_obj, solr_ce_SolrParams) == FAILURE) {
+        
+		solr_throw_exception_ex(solr_ce_SolrIllegalArgumentException, SOLR_ERROR_4000 TSRMLS_CC, SOLR_FILE_LINE_FUNC, SOLR_ERROR_4000_MSG);
+        
+		return;
+	}
+    
+	/* Retrieve the client entry */
+	if (solr_fetch_client_entry(getThis(), &client TSRMLS_CC) == FAILURE)
+	{
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Unable to retrieve client");
+        
+		return;
+	}
+    
+	/* Make sure the SolrParams object passed is a valid one */
+	if (solr_fetch_params_entry(solr_params_obj, &solr_params TSRMLS_CC) == FAILURE) {
+        
+		solr_throw_exception_ex(solr_ce_SolrIllegalArgumentException, SOLR_ERROR_4000 TSRMLS_CC, SOLR_FILE_LINE_FUNC, "SolrParams parameter passed is not a valid one.");
+        
+		return ;
+	}
+    
+	/* The SolrParams instance must contain at least one parameter */
+	if (zend_hash_num_elements(solr_params->params) < 1)
+	{
+		solr_throw_exception_ex(solr_ce_SolrIllegalArgumentException, SOLR_ERROR_4000 TSRMLS_CC, SOLR_FILE_LINE_FUNC, "SolrParams parameter passed contains no parameters.");
+        
+		return ;
+	}
+    
+	buffer = &(client->handle.request_body.buffer);
+    
+	/* Get rid of all the data from the previous request */
+	solr_string_free(buffer);
+    
+	delimiter = client->options.qs_delimiter.str;
+    
+	delimiter_length = client->options.qs_delimiter.len;
+    
+    /* Remove wt if any */
+	zend_hash_del(solr_params->params, "wt", sizeof("wt")-1);
+    
+    
+    if (solr_http_build_query(buffer, solr_params_obj, delimiter, delimiter_length TSRMLS_CC) == FAILURE)
+	{
+		solr_throw_exception_ex(solr_ce_SolrException, SOLR_ERROR_1003 TSRMLS_CC, SOLR_FILE_LINE_FUNC, "Error building HTTP query from parameters");
+        
+		return;
+	}
+    
+    /* Always reset the URLs before making any request */
+	solr_client_init_urls(client);
+    
+    
+    /* Make the HTTP request to the Solr instance */
+	if (solr_make_request(client, solr_request_type TSRMLS_CC) == FAILURE)
+	{
+		success = 0;
+        
+		solr_throw_exception_ex(solr_ce_SolrClientException, SOLR_ERROR_1004 TSRMLS_CC, SOLR_FILE_LINE_FUNC, "Unsuccessful query request : Response Code %ld. %s", SOLR_RESPONSE_CODE_BODY);
+        
+		SOLR_SHOW_CURL_WARNING;
+	}
+    
+	object_init_ex(return_value, solr_ce_SolrQueryResponse);
+    solr_set_response_object_properties(solr_ce_SolrQueryResponse, return_value, client, &(client->options.search_url), success TSRMLS_CC);
+    
+    
+}
 // client->handle.err.str client->handle.request_body_debug.buffer.str
 
 /* {{{ proto SolrQueryResponse SolrClient::query(SolrParams query)
@@ -731,8 +831,7 @@ PHP_METHOD(SolrClient, addDocument)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O|bl", &solr_input_doc, solr_ce_SolrInputDocument, &allowDups, &commitWithin) == FAILURE) {
 
 		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid parameter.");
-
-		return;
+        return;
 	}
 
 	if (solr_fetch_document_entry(solr_input_doc, &doc_entry TSRMLS_CC) == FAILURE) {

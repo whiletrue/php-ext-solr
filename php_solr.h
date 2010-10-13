@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: php_solr.h 300591 2010-06-19 06:05:35Z iekpo $ */
 
 #ifndef SOLRCLIENT_H
 #define SOLRCLIENT_H
@@ -236,6 +236,7 @@ PHP_METHOD(SolrClient, addDocuments);
 PHP_METHOD(SolrClient, setServlet);
 PHP_METHOD(SolrClient, setResponseWriter);
 PHP_METHOD(SolrClient, request);
+PHP_METHOD(SolrClient, requestGeneric);
 PHP_METHOD(SolrClient, ping);
 PHP_METHOD(SolrClient, threads);
 PHP_METHOD(SolrClient, deleteById);

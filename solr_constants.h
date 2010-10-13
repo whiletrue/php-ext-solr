@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: solr_constants.h 300493 2010-06-16 12:21:19Z iekpo $ */
 
 #ifndef SOLR_CONSTANTS_H
 #define SOLR_CONSTANTS_H
@@ -31,6 +31,7 @@
 #define SOLR_DEFAULT_THREADS_SERVLET "admin/threads"
 #define SOLR_DEFAULT_PING_SERVLET    "admin/ping"
 #define SOLR_DEFAULT_TERMS_SERVLET   "terms"
+#define SOLR_DEFAULT_GENERIC_SERVLET "suggest"
 
 #define SOLR_PHP_SERIALIZED_RESPONSE_WRITER    "phps"
 #define SOLR_PHP_NATIVE_RESPONSE_WRITER        "phpnative"

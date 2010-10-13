@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: solr_types.h 300493 2010-06-16 12:21:19Z iekpo $ */
 
 #ifndef SOLR_TYPES_H
 #define SOLR_TYPES_H
@@ -58,6 +58,7 @@ typedef enum {
 	SOLR_REQUEST_THREADS = 3,    /** 3 **/
 	SOLR_REQUEST_PING    = 4,    /** 4 **/
 	SOLR_REQUEST_TERMS   = 5,    /** 5 **/
+    SOLR_REQUEST_GENERIC = 6,    /** 6 **/
 	SOLR_REQUEST_END
 
 } solr_request_type_t;
@@ -70,6 +71,7 @@ typedef enum {
 	SOLR_SERVLET_TYPE_THREADS = 4,
 	SOLR_SERVLET_TYPE_PING    = 8,
 	SOLR_SERVLET_TYPE_TERMS   = 16,
+    SOLR_SERVLET_TYPE_GENERIC = 32,
 	SOLR_SERVLET_TYPE_END
 
 } solr_servlet_type_t;
@@ -203,6 +205,8 @@ typedef struct {
 
 	solr_string_t terms_url;				/* URL for sending terms requests */
 
+    solr_string_t generic_url;				/* URL for sending generic requests */
+
 	solr_string_t update_servlet;			/* The update servlet */
 
 	solr_string_t search_servlet;			/* The search servlet */
@@ -212,6 +216,8 @@ typedef struct {
 	solr_string_t ping_servlet;				/* The ping servlet */
 
 	solr_string_t terms_servlet;			/* The terms servlet */
+    
+    solr_string_t generic_servlet;			/* The generic servlet */
 
 } solr_client_options_t;
 

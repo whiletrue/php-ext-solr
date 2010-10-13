@@ -16,7 +16,7 @@
    +----------------------------------------------------------------------+
 */
 
-/* $Id$ */
+/* $Id: solr_functions_client.c 298824 2010-04-30 21:36:26Z iekpo $ */
 
 #include "php_solr.h"
 
@@ -42,6 +42,7 @@ PHP_SOLR_API int solr_init_options(solr_client_options_t *options TSRMLS_DC)
 	solr_string_init(&(options->thread_url));
 	solr_string_init(&(options->ping_url));
 	solr_string_init(&(options->terms_url));
+    solr_string_init(&(options->generic_url));
 
 	solr_string_init(&(options->update_servlet));
 	solr_string_init(&(options->search_servlet));
@@ -408,7 +409,14 @@ PHP_SOLR_API int solr_make_request(solr_client_t *client, solr_request_type_t re
 			curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPHEADER, header_list);
 		}
 		break;
-
+            
+        case SOLR_REQUEST_GENERIC:
+            curl_easy_setopt(sch->curl_handle, CURLOPT_URL, options->generic_url.str);
+            curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPHEADER, header_list);
+            curl_easy_setopt(sch->curl_handle, CURLOPT_POSTFIELDSIZE, sch->request_body.buffer.len);
+			curl_easy_setopt(sch->curl_handle, CURLOPT_POSTFIELDS, sch->request_body.buffer.str);
+        break;
+            
 		default :
 		{
 			return_status = FAILURE;
